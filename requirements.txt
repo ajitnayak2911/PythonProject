@@ -1,4 +1,4 @@
-streamlit 
-playwright 
-openpyxl 
-asyncio
+playwright
+openpyxl
+pandas
+streamlit
