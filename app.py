@@ -4,12 +4,13 @@ import threading
 import time
 import sys
 from io import StringIO
-import os
 import re
 import pandas as pd
 import traceback
 import webbrowser  # for open‑folder link
-import subprocess, os, glob
+#import subprocess, os, glob
+import os
+os.system("playwright install chromium")
 
 # --- Windows asyncio fix ---
 if sys.platform.startswith("win"):
