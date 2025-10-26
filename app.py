@@ -37,17 +37,20 @@ with st.sidebar:
     st.header("Configuration")
     dev_username = st.text_input("DEV Username", value=form_automation.DEV_USERNAME)
     dev_password = st.text_input("DEV Password", type="password", value=form_automation.DEV_PASSWORD)
-    input_file = st.text_input("Input Excel file path", value=form_automation.INPUT_FILE)
-    output_file = st.text_input("Output Excel file path", value=form_automation.OUTPUT_FILE)
-    headless = st.checkbox("Run headless browser", value=True)
-    show_all_logs = st.checkbox("Show full logs", value=True)
-    run_btn = st.button("🚀 Run Automation")
+    #input_file = st.text_input("Input Excel file path", value=form_automation.INPUT_FILE)
+    #output_file = st.text_input("Output Excel file path", value=form_automation.OUTPUT_FILE)
+uploaded_input_file = st.file_uploader("Upload Input Excel file", type=["xlsx"])
+output_buffer = None
+
+headless = st.checkbox("Run headless browser", value=True)
+show_all_logs = st.checkbox("Show full logs", value=True)
+run_btn = st.button("🚀 Run Automation")
 
 # --- Apply runtime config ---
 form_automation.DEV_USERNAME = dev_username
 form_automation.DEV_PASSWORD = dev_password
-form_automation.INPUT_FILE = input_file
-form_automation.OUTPUT_FILE = output_file
+#form_automation.INPUT_FILE = input_file
+#form_automation.OUTPUT_FILE = output_file
 
 # Placeholders for dynamic UI sections
 status_box = st.empty()
@@ -77,9 +80,16 @@ def run_async_main(log_stream):
 
 # --- Run button pressed ---
 if run_btn:
-    if not os.path.exists(input_file):
-        st.error(f"❌ Input file not found: {input_file}")
+    if not uploaded_input_file:
+        st.error("Please upload an input Excel (xlsx) file.")
         st.stop()
+    input_df = pd.read_excel(uploaded_input_file)
+    temp_input = "temp_input.xlsx"
+    input_df.to_excel(temp_input, index=False)
+    form_automation.INPUT_FILE = temp_input
+    temp_output = "temp_output.xlsx"
+    form_automation.OUTPUT_FILE = temp_output
+
 
     start_time = time.time()
     status_box.info("Starting automation... This may take a few minutes.")
@@ -134,16 +144,17 @@ if run_btn:
 
     st.text_area("📝 Final Logs", final_logs, height=400, key="final_logs")
 
-    status_box.success(f"✅ Completed in {elapsed}s! Results saved at: {output_file}")
+    #status_box.success(f"✅ Completed in {elapsed}s! Results saved at: {output_file}")
 
     # Download + open folder helper
-    if os.path.exists(output_file):
-        with open(output_file, "rb") as f:
+    if os.path.exists(temp_output):
+        with open(temp_output, "rb") as f:
             st.download_button(
                 "⬇️ Download Results (Excel)",
                 f,
-                file_name=os.path.basename(output_file),
+                file_name="output.xlsx",
+
             )
-        folder = os.path.dirname(output_file)
-        st.markdown(f"[📂 Open results folder]({folder})")
+        #folder = os.path.dirname(output_file)
+        #st.markdown(f"[📂 Open results folder]({folder})")
 

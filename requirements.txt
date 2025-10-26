@@ -1,4 +1,4 @@
 streamlit 
 playwright 
 openpyxl 
-asyncio 
+asyncio
