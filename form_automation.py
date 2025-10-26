@@ -386,17 +386,11 @@ async def main():
 
     async with async_playwright() as p:
         # ✅ Auto-detect latest Chromium binary
-        base_path = os.path.expanduser(r"C:\Users\ajitk\AppData\Local\ms-playwright")
-        chromium_folders = sorted(glob.glob(os.path.join(base_path, "chromium-*")), reverse=True)
-        if not chromium_folders:
-            raise FileNotFoundError("No Chromium install found. Please run: playwright install chromium")
-        chromium_path = os.path.join(chromium_folders[0], "chrome-win", "chrome.exe")
-        print(f"✅ Using Chromium binary: {chromium_path}")
+        browser = await p.chromium.launch(headless=True)
 
-        browser = await p.chromium.launch(
-            headless=True,
-            executable_path=chromium_path
-        )
+        # ✅ NEW CODE — use a single browser context for all forms
+        context = await browser.new_context()
+        page = await context.new_page()
 
         for i, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
             url = row[url_col - 1]
