@@ -10,8 +10,9 @@ import traceback
 import webbrowser  # for open‑folder link
 #import subprocess, os, glob
 import os
-os.system("playwright install chromium")
 
+os.system("playwright install-deps")
+os.system("playwright install chromium")
 # --- Windows asyncio fix ---
 if sys.platform.startswith("win"):
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
