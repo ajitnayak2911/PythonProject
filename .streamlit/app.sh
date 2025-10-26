@@ -1,4 +1,5 @@
 #!/bin/bash
-pip install playwright
+pip install -r requirements.txt
+playwright install-deps
 playwright install chromium
 streamlit run app.py
