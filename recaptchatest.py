@@ -1,17 +1,15 @@
 import asyncio
 import os
 import warnings
-import asyncio
 import random
 import json
 import time
 from faker import Faker
 from dotenv import load_dotenv
 from browser_use.agent.service import Agent
-from browser_use.controller.service import Controller
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-from pydantic import SecretStr, BaseModel
+from browser_use import Controller
+from browser_use.llm import ChatGoogle    # ✅ use browser_use's Gemini wrapper (not LangChain)
+from pydantic import BaseModel
 from playwright.async_api import BrowserContext, async_playwright
 import requests
 from fake_useragent import UserAgent
@@ -52,9 +50,9 @@ def get_random_proxy():
     return None
 
 async def SiteValidation():
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise EnvironmentError("GEMINI_API_KEY not found in environment variables")
+        raise EnvironmentError("GOOGLE_API_KEY or GEMINI_API_KEY not found in environment variables")
 
     test_data = generate_random_test_data()
 
@@ -94,7 +92,6 @@ async def SiteValidation():
         "4d. Ensure that each located form uses a newly randomized dataset for every submission. All values (First Name, Email, Phone, Comment) must be unique and randomized per run, except the Last Name which must always remain 'TESTTEST'.\n"
         f"5. For each form submission, fill all mandatory fields with fresh, randomized, and valid data:\n"
         f"   - First Name: {test_data['first_name']}\n"
-        # f"   - Last Name: {test_data['last_name']}\n"
         f"   - Last Name: TESTTEST \n"
         f"   - Email: {test_data['email']}\n"
         f"   - Phone Number: {test_data['phone']}\n"
@@ -120,11 +117,12 @@ async def SiteValidation():
         "- Maintain a log of completed forms (by form heading, unique label, or first field placeholder) and skip them if encountered again in the same session.\n"
         "- Follow all steps in order.\n"
     )
+
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=SecretStr(api_key))
+        llm = ChatGoogle(model="gemini-2.0-flash", api_key=api_key)
     except Exception as e:
-        print("Model not available, falling back to 'gemini-1.5-flash'")
-        llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", api_key=SecretStr(api_key))
+        print("Model not available, falling back to 'gemini-1.5-flash'", e)
+        llm = ChatGoogle(model="gemini-2.5-flash-lite", api_key=api_key)
 
     agent = Agent(
         task=task,
@@ -140,7 +138,6 @@ async def SiteValidation():
     print("Test result:")
     if isinstance(test_result, str):
         test_result = json.loads(test_result)
-
         print(json.dumps(test_result, indent=2))
 
     with open("submission_result.json", "w") as f:
